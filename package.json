@@ -1,0 +1,20 @@
+{
+  "name": "fixmytown-backend",
+  "version": "1.0.0",
+  "description": "FixMyTown Community Reporting Backend",
+  "main": "backend/dist/server.js",
+  "scripts": {
+    "postinstall": "cd backend && npm install",
+    "build": "cd backend && npm run build",
+    "start": "cd backend && npm run start:prod",
+    "dev": "cd backend && npm run dev"
+  },
+  "keywords": ["community", "reporting", "backend", "api"],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
