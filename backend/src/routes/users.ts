@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { userService } from '@/services/userService';
 import { validateBody, validateQuery, validateParams } from '@/middleware/validation';
@@ -12,7 +12,7 @@ const router = Router();
 // Get user profile by ID (public endpoint)
 router.get('/:id',
   validateParams(z.object({ id: z.string().uuid() })),
-  asyncHandler(async (req, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const user = await userService.getUserById(id);
@@ -38,7 +38,7 @@ router.get('/:id',
 router.put('/me',
   authenticateToken,
   validateBody(UpdateUserSchema),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const user = await userService.updateUser(req.user!.id, req.body);
 
     res.status(200).json({
@@ -52,7 +52,7 @@ router.put('/me',
 // Get user statistics
 router.get('/:id/stats',
   validateParams(z.object({ id: z.string().uuid() })),
-  asyncHandler(async (req, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const stats = await userService.getUserStats(id);
@@ -70,7 +70,7 @@ router.get('/',
   authenticateToken,
   requireAdmin,
   validateQuery(PaginationSchema),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<PaginatedResponse<any>>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const pagination = req.query as any;
 
     const result = await userService.getAllUsers(pagination);
@@ -94,7 +94,7 @@ router.put('/:id',
   requireAdmin,
   validateParams(z.object({ id: z.string().uuid() })),
   validateBody(UpdateUserSchema),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
 
     const user = await userService.updateUser(id, req.body);
@@ -112,7 +112,7 @@ router.delete('/:id',
   authenticateToken,
   requireAdmin,
   validateParams(z.object({ id: z.string().uuid() })),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
 
     await userService.deleteUser(id);
@@ -129,7 +129,7 @@ router.post('/:id/make-admin',
   authenticateToken,
   requireAdmin,
   validateParams(z.object({ id: z.string().uuid() })),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
 
     const user = await userService.makeAdmin(id);
@@ -147,7 +147,7 @@ router.post('/:id/remove-admin',
   authenticateToken,
   requireAdmin,
   validateParams(z.object({ id: z.string().uuid() })),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
 
     const user = await userService.removeAdmin(id);

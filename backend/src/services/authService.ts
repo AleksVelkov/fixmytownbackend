@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import { env } from '@/config/env';
 import { userService } from './userService';
@@ -13,19 +13,13 @@ export class AuthService {
   }
 
   generateToken(user: User): string {
-    return jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-        isAdmin: user.isAdmin
-      },
-      env.JWT_SECRET,
-      {
-        expiresIn: env.JWT_EXPIRES_IN,
-        issuer: 'reports-api',
-        audience: 'reports-app'
-      }
-    );
+    const payload = {
+      id: user.id,
+      email: user.email,
+      isAdmin: user.isAdmin
+    };
+    
+    return jwt.sign(payload, env.JWT_SECRET, { expiresIn: '7d' });
   }
 
   async verifyGoogleToken(idToken: string): Promise<{
@@ -82,7 +76,7 @@ export class AuthService {
         if (user) {
           // User exists but doesn't have Google ID linked, update it
           user = await userService.updateUser(user.id, {
-            avatar: googleUser.picture || user.avatar
+            avatar: googleUser.picture || user.avatar || undefined
           });
         } else {
           // Create new user

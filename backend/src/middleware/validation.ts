@@ -13,7 +13,7 @@ export const validateBody = <T extends z.ZodType>(schema: T) => {
         res.status(400).json({
           success: false,
           error: 'Validation failed',
-          message: error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+          message: error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ')
         });
       } else {
         res.status(400).json({
@@ -36,7 +36,7 @@ export const validateQuery = <T extends z.ZodType>(schema: T) => {
         res.status(400).json({
           success: false,
           error: 'Invalid query parameters',
-          message: error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+          message: error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ')
         });
       } else {
         res.status(400).json({
@@ -59,7 +59,7 @@ export const validateParams = <T extends z.ZodType>(schema: T) => {
         res.status(400).json({
           success: false,
           error: 'Invalid URL parameters',
-          message: error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+          message: error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ')
         });
       } else {
         res.status(400).json({

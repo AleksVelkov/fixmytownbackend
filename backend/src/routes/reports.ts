@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { reportService } from '@/services/reportService';
 import { validateBody, validateQuery, validateParams } from '@/middleware/validation';
@@ -21,7 +21,7 @@ const router = Router();
 router.get('/',
   optionalAuth,
   validateQuery(PaginationSchema.merge(ReportFiltersSchema)),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<PaginatedResponse<any>>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { page, limit, ...filters } = req.query as any;
     const pagination = { page, limit };
 
@@ -44,7 +44,7 @@ router.get('/',
 router.get('/:id',
   optionalAuth,
   validateParams(z.object({ id: z.string().uuid() })),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
 
     const report = await reportService.getReportById(id, req.user?.id);
@@ -61,7 +61,7 @@ router.post('/',
   authenticateToken,
   createReportLimiter,
   validateBody(CreateReportSchema),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const report = await reportService.createReport(req.body, req.user!.id);
 
     res.status(201).json({
@@ -77,7 +77,7 @@ router.put('/:id',
   authenticateToken,
   validateParams(z.object({ id: z.string().uuid() })),
   validateBody(UpdateReportSchema),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
 
     const report = await reportService.updateReport(id, req.body, req.user!.id, req.user!.isAdmin);
@@ -94,7 +94,7 @@ router.put('/:id',
 router.delete('/:id',
   authenticateToken,
   validateParams(z.object({ id: z.string().uuid() })),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
 
     await reportService.deleteReport(id, req.user!.id, req.user!.isAdmin);
@@ -112,7 +112,7 @@ router.post('/:id/vote',
   voteLimiter,
   validateParams(z.object({ id: z.string().uuid() })),
   validateBody(VoteSchema),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
     const { type } = req.body;
 
@@ -130,7 +130,7 @@ router.post('/:id/vote',
 router.get('/user/my-reports',
   authenticateToken,
   validateQuery(PaginationSchema),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<PaginatedResponse<any>>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const pagination = req.query as any;
 
     const result = await reportService.getUserReports(req.user!.id, pagination);
@@ -152,7 +152,7 @@ router.get('/user/my-reports',
 router.get('/user/:userId',
   validateParams(z.object({ userId: z.string().uuid() })),
   validateQuery(PaginationSchema),
-  asyncHandler(async (req, res: Response<PaginatedResponse<any>>) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     const pagination = req.query as any;
 
@@ -173,7 +173,7 @@ router.get('/user/:userId',
 
 // Get report statistics (public endpoint)
 router.get('/stats/overview',
-  asyncHandler(async (req, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const stats = await reportService.getReportStats();
 
     res.status(200).json({
@@ -189,7 +189,7 @@ router.get('/admin/pending',
   authenticateToken,
   requireAdmin,
   validateQuery(PaginationSchema),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<PaginatedResponse<any>>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const pagination = req.query as any;
 
     const result = await reportService.getPendingReports(pagination);
@@ -213,7 +213,7 @@ router.post('/:id/admin-action',
   requireAdmin,
   validateParams(z.object({ id: z.string().uuid() })),
   validateBody(AdminActionSchema),
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
     const { action, reason } = req.body;
 

@@ -9,7 +9,7 @@ const envSchema = z.object({
   // Server
   PORT: z.string().default('3000').transform(Number),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  API_BASE_URL: z.string().url(),
+  API_BASE_URL: z.string().url().default('https://fixmytown.online'),
   
   // JWT
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
@@ -20,19 +20,15 @@ const envSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   SUPABASE_ANON_KEY: z.string().min(1),
   
-  // Digital Ocean Spaces
-  DO_SPACES_ENDPOINT: z.string().url(),
-  DO_SPACES_BUCKET: z.string().min(1),
-  DO_SPACES_REGION: z.string().min(1),
-  DO_SPACES_ACCESS_KEY: z.string().min(1),
-  DO_SPACES_SECRET_KEY: z.string().min(1),
+  // Supabase Storage
+  SUPABASE_STORAGE_BUCKET: z.string().min(1).default('reports-images'),
   
   // Google OAuth
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
   
   // CORS
-  ALLOWED_ORIGINS: z.string().transform(str => str.split(',')),
+  ALLOWED_ORIGINS: z.string().default('https://fixmytown.online,https://www.fixmytown.online,http://localhost:3000,http://localhost:3001').transform(str => str.split(',')),
   
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS: z.string().default('900000').transform(Number),

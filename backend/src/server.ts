@@ -10,6 +10,7 @@ import { errorHandler, notFoundHandler } from '@/middleware/errorHandler';
 import authRoutes from '@/routes/auth';
 import reportRoutes from '@/routes/reports';
 import userRoutes from '@/routes/users';
+import uploadRoutes from '@/routes/upload';
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -59,6 +61,7 @@ app.get('/', (req, res) => {
       auth: '/api/auth',
       reports: '/api/reports',
       users: '/api/users',
+      upload: '/api/upload',
       health: '/health'
     }
   });
@@ -79,17 +82,26 @@ const startServer = async () => {
     }
 
     // Start the server
-    app.listen(env.PORT, () => {
-      console.log(`🚀 Server running on port ${env.PORT}`);
+    const port = Number(env.PORT || process.env.PORT || 3000);
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`🚀 Server running on port ${port}`);
       console.log(`📍 Environment: ${env.NODE_ENV}`);
       console.log(`🔗 API Base URL: ${env.API_BASE_URL}`);
       console.log(`📚 API Documentation: ${env.API_BASE_URL}/`);
       
       if (!isProduction) {
-        console.log(`🔧 Health Check: http://localhost:${env.PORT}/health`);
-        console.log(`🔐 Auth Endpoints: http://localhost:${env.PORT}/api/auth`);
-        console.log(`📊 Reports Endpoints: http://localhost:${env.PORT}/api/reports`);
-        console.log(`👥 Users Endpoints: http://localhost:${env.PORT}/api/users`);
+        console.log(`🔧 Health Check: http://localhost:${port}/health`);
+        console.log(`🔐 Auth Endpoints: http://localhost:${port}/api/auth`);
+        console.log(`📊 Reports Endpoints: http://localhost:${port}/api/reports`);
+        console.log(`👥 Users Endpoints: http://localhost:${port}/api/users`);
+        console.log(`📁 Upload Endpoints: http://localhost:${port}/api/upload`);
+      } else {
+        console.log(`🌐 Production Server: ${env.API_BASE_URL}`);
+        console.log(`✅ Health Check: ${env.API_BASE_URL}/health`);
+        console.log(`🔐 Auth API: ${env.API_BASE_URL}/api/auth`);
+        console.log(`📊 Reports API: ${env.API_BASE_URL}/api/reports`);
+        console.log(`👥 Users API: ${env.API_BASE_URL}/api/users`);
+        console.log(`📁 Upload API: ${env.API_BASE_URL}/api/upload`);
       }
     });
   } catch (error) {

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { authService } from '@/services/authService';
 import { userService } from '@/services/userService';
 import { validateBody } from '@/middleware/validation';
@@ -16,7 +16,7 @@ router.use(authLimiter);
 // Google OAuth login
 router.post('/google', 
   validateBody(GoogleAuthSchema),
-  asyncHandler(async (req, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { idToken } = req.body;
 
     const result = await authService.authenticateWithGoogle(idToken);
@@ -35,7 +35,7 @@ router.post('/google',
 
 // Refresh token
 router.post('/refresh',
-  asyncHandler(async (req, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -48,7 +48,7 @@ router.post('/refresh',
 
     const newToken = await authService.refreshToken(token);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: { token: newToken },
       message: 'Token refreshed successfully'
@@ -59,7 +59,7 @@ router.post('/refresh',
 // Get current user profile
 router.get('/me',
   authenticateToken,
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const user = await userService.getUserById(req.user!.id);
 
     res.status(200).json({
@@ -72,7 +72,7 @@ router.get('/me',
 // Logout (client-side token removal, but we can blacklist tokens in future)
 router.post('/logout',
   authenticateToken,
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     // In a more sophisticated setup, you might want to blacklist the token
     // For now, we just return success and let the client remove the token
     
@@ -86,7 +86,7 @@ router.post('/logout',
 // Verify token endpoint (useful for client-side token validation)
 router.post('/verify',
   authenticateToken,
-  asyncHandler(async (req: AuthenticatedRequest, res: Response<ApiResponse>) => {
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     res.status(200).json({
       success: true,
       data: {
