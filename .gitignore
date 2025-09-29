@@ -5,3 +5,4 @@ backend/dist
 backend/node_modules
 RAILWAY_DEPLOYMENT_FIXED.md
 backend/RAILWAY_DOCKER_FIX.md
+backend/TYPESCRIPT_BUILD_FIXED.md
