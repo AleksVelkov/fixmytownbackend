@@ -6,7 +6,7 @@
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
     "start:prod": "node dist/server.js",
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "postbuild": "copy package*.json dist\\",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -38,6 +38,7 @@
     "@types/node": "^24.5.2",
     "@types/uuid": "^10.0.0",
     "eslint": "^9.36.0",
+    "tsc-alias": "^1.8.10",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2"
   }
