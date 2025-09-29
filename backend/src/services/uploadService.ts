@@ -2,7 +2,7 @@ import { supabase } from '@/config/database';
 import { env } from '@/config/env';
 import { createError } from '@/middleware/errorHandler';
 import sharp from 'sharp';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export class UploadService {
   private readonly allowedTypes = env.ALLOWED_FILE_TYPES;
@@ -64,7 +64,7 @@ export class UploadService {
 
       // Generate unique filename
       const fileExtension = 'webp'; // Always use WebP after processing
-      const fileName = `${folder}/${uuidv4()}.${fileExtension}`;
+      const fileName = `${folder}/${randomUUID()}.${fileExtension}`;
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
