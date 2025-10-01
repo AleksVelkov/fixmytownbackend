@@ -73,8 +73,8 @@ export const AdminActionSchema = z.object({
 
 // Query parameters
 export const PaginationSchema = z.object({
-  page: z.string().default('1').transform(Number),
-  limit: z.string().default('20').transform(Number),
+  page: z.string().optional().transform(val => val ? Number(val) : 1),
+  limit: z.string().optional().transform(val => val ? Number(val) : 20),
 });
 
 export const ReportFiltersSchema = z.object({

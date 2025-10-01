@@ -71,7 +71,7 @@ router.get('/',
   requireAdmin,
   validateQuery(PaginationSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const pagination = req.query as any;
+    const pagination = (req as any).validatedQuery || req.query;
 
     const result = await userService.getAllUsers(pagination);
 

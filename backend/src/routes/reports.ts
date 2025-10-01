@@ -22,7 +22,7 @@ router.get('/',
   optionalAuth,
   validateQuery(PaginationSchema.merge(ReportFiltersSchema)),
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const { page, limit, ...filters } = req.query as any;
+    const { page, limit, ...filters } = (req as any).validatedQuery || req.query;
     const pagination = { page, limit };
 
     const result = await reportService.getAllReports(filters, pagination, req.user?.id);
@@ -131,7 +131,7 @@ router.get('/user/my-reports',
   authenticateToken,
   validateQuery(PaginationSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const pagination = req.query as any;
+    const pagination = (req as any).validatedQuery || req.query;
 
     const result = await reportService.getUserReports(req.user!.id, pagination);
 
@@ -154,7 +154,7 @@ router.get('/user/:userId',
   validateQuery(PaginationSchema),
   asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
-    const pagination = req.query as any;
+    const pagination = (req as any).validatedQuery || req.query;
 
     const result = await reportService.getUserReports(userId, pagination);
 
@@ -190,7 +190,7 @@ router.get('/admin/pending',
   requireAdmin,
   validateQuery(PaginationSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const pagination = req.query as any;
+    const pagination = (req as any).validatedQuery || req.query;
 
     const result = await reportService.getPendingReports(pagination);
 
