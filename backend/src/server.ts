@@ -14,6 +14,14 @@ import uploadRoutes from '@/routes/upload';
 
 const app = express();
 
+// Trust proxy for production deployment (Railway, Heroku, etc.)
+if (isProduction) {
+  app.set('trust proxy', 1);
+} else {
+  // For development, trust localhost proxies
+  app.set('trust proxy', 'loopback');
+}
+
 // Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
