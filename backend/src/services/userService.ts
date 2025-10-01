@@ -11,10 +11,10 @@ export class UserService {
       email: dbUser.email,
       name: dbUser.name,
       avatar: dbUser.avatar,
-      city: dbUser.city,
+      city: (dbUser as any).location || dbUser.city, // Handle both location and city columns
       country: dbUser.country,
       googleId: dbUser.google_id,
-      isAdmin: dbUser.is_admin,
+      isAdmin: dbUser.is_admin || false, // Default to false if column doesn't exist
       createdAt: new Date(dbUser.created_at),
       updatedAt: dbUser.updated_at ? new Date(dbUser.updated_at) : null,
     };
@@ -163,14 +163,19 @@ export class UserService {
       // First check if user exists
       await this.getUserById(id);
 
+      console.log('Updating user with ID:', id);
+      console.log('Update data received:', updates);
+
       const updateData: any = {};
       
       if (updates.name) updateData.name = updates.name;
       if (updates.avatar !== undefined) updateData.avatar = updates.avatar;
-      if (updates.city !== undefined) updateData.city = updates.city;
+      // Note: Based on your database schema, city and country might not exist
+      // Let's check what columns are available in your users table
+      if (updates.city !== undefined) updateData.location = updates.city; // Using 'location' column from your schema
       if (updates.country !== undefined) updateData.country = updates.country;
 
-      updateData.updated_at = new Date().toISOString();
+      console.log('Prepared update data:', updateData);
 
       const { data, error } = await supabase
         .from('users')
@@ -178,6 +183,8 @@ export class UserService {
         .eq('id', id)
         .select()
         .single();
+
+      console.log('Database update result:', { data, error });
 
       if (error) {
         console.error('Error updating user:', error);
