@@ -16,7 +16,7 @@ export class AuthService {
 
   generateToken(user: User): string {
     const payload = {
-      id: user.id,
+      userId: user.id,  // Changed from 'id' to 'userId' to match middleware expectation
       email: user.email,
       isAdmin: user.isAdmin
     };

@@ -17,10 +17,10 @@ export const authenticateToken = async (
   res: Response<ApiResponse>,
   next: NextFunction
 ): Promise<void> => {
-  try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
+  try {
     if (!token) {
       res.status(401).json({
         success: false,
@@ -31,6 +31,7 @@ export const authenticateToken = async (
 
     // Verify JWT token
     const decoded = jwt.verify(token, env.JWT_SECRET) as any;
+    console.log('Token decoded successfully:', { userId: decoded.userId, email: decoded.email });
     
     // Get user from database to ensure they still exist and get latest info
     const { data: user, error } = await supabase
@@ -57,6 +58,8 @@ export const authenticateToken = async (
     next();
   } catch (error) {
     console.error('Authentication error:', error);
+    console.error('JWT Secret length:', env.JWT_SECRET?.length);
+    console.error('Token that failed:', token ? token.substring(0, 20) + '...' : 'no token');
     res.status(401).json({
       success: false,
       error: 'Invalid or expired token'

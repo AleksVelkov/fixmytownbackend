@@ -156,4 +156,22 @@ router.post('/create-admin',
   })
 );
 
+// Debug endpoint to check JWT secret (remove in production)
+router.get('/debug-jwt',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { env } = await import('@/config/env');
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        jwtSecretLength: env.JWT_SECRET?.length || 0,
+        jwtSecretFirst4: env.JWT_SECRET?.substring(0, 4) || 'undefined',
+        jwtExpiresIn: env.JWT_EXPIRES_IN,
+        nodeEnv: process.env.NODE_ENV
+      },
+      message: 'JWT configuration debug info'
+    });
+  })
+);
+
 export default router;
