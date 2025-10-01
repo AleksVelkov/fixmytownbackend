@@ -34,13 +34,17 @@ export const authenticateToken = async (
     console.log('Token decoded successfully:', { userId: decoded.userId, email: decoded.email });
     
     // Get user from database to ensure they still exist and get latest info
+    console.log('Looking for user with ID:', decoded.userId);
     const { data: user, error } = await supabase
       .from('users')
       .select('id, email, is_admin')
       .eq('id', decoded.userId)
       .single();
 
+    console.log('Database query result:', { user, error });
+
     if (error || !user) {
+      console.log('User not found in database or error occurred');
       res.status(401).json({
         success: false,
         error: 'Invalid or expired token'
