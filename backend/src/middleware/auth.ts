@@ -37,7 +37,7 @@ export const authenticateToken = async (
     console.log('Looking for user with ID:', decoded.userId);
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, email, is_admin')
+      .select('id, email')
       .eq('id', decoded.userId)
       .single();
 
@@ -56,7 +56,7 @@ export const authenticateToken = async (
     req.user = {
       id: user.id,
       email: user.email,
-      isAdmin: user.is_admin
+      isAdmin: decoded.isAdmin || false // Use the isAdmin from JWT token
     };
 
     next();
@@ -101,7 +101,7 @@ export const optionalAuth = async (
         
         const { data: user, error } = await supabase
           .from('users')
-          .select('id, email, is_admin')
+          .select('id, email')
           .eq('id', decoded.userId)
           .single();
 
@@ -109,7 +109,7 @@ export const optionalAuth = async (
           req.user = {
             id: user.id,
             email: user.email,
-            isAdmin: user.is_admin
+            isAdmin: decoded.isAdmin || false
           };
         }
       } catch (error) {
