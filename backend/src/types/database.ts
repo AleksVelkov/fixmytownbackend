@@ -27,6 +27,7 @@ export interface DatabaseUser {
   id: string;
   email: string;
   name: string;
+  password_hash: string | null;
   avatar: string | null;
   city: string | null;
   country: string | null;

@@ -5,13 +5,47 @@ import { validateBody } from '@/middleware/validation';
 import { authenticateToken, AuthenticatedRequest } from '@/middleware/auth';
 import { authLimiter } from '@/middleware/rateLimiting';
 import { asyncHandler } from '@/middleware/errorHandler';
-import { GoogleAuthSchema } from '@/types/api';
+import { GoogleAuthSchema, LoginSchema, RegisterSchema } from '@/types/api';
 import { ApiResponse } from '@/types/api';
 
 const router = Router();
 
 // Apply auth rate limiting to all auth routes
 router.use(authLimiter);
+
+// Email/Password Registration
+router.post('/register',
+  validateBody(RegisterSchema),
+  asyncHandler(async (req: Request, res: Response) => {
+    const result = await authService.registerUser(req.body);
+
+    res.status(201).json({
+      success: true,
+      data: {
+        user: result.user,
+        token: result.token
+      },
+      message: 'Account created successfully'
+    });
+  })
+);
+
+// Email/Password Login
+router.post('/login',
+  validateBody(LoginSchema),
+  asyncHandler(async (req: Request, res: Response) => {
+    const result = await authService.loginUser(req.body);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user: result.user,
+        token: result.token
+      },
+      message: 'Login successful'
+    });
+  })
+);
 
 // Google OAuth login
 router.post('/google', 
@@ -97,6 +131,27 @@ router.post('/verify',
           isAdmin: req.user!.isAdmin
         }
       }
+    });
+  })
+);
+
+// Create admin user (temporary endpoint for initial setup)
+router.post('/create-admin',
+  validateBody(RegisterSchema),
+  asyncHandler(async (req: Request, res: Response) => {
+    // Create admin user with elevated privileges
+    const result = await authService.registerUser({
+      ...req.body,
+      isAdmin: true
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        user: result.user,
+        token: result.token
+      },
+      message: 'Admin account created successfully'
     });
   })
 );

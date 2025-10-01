@@ -1,9 +1,11 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
+import bcrypt from 'bcryptjs';
 import { env } from '@/config/env';
 import { userService } from './userService';
 import { User } from '@/types/database';
 import { createError } from '@/middleware/errorHandler';
+import { LoginRequest, RegisterRequest } from '@/types/api';
 
 export class AuthService {
   private googleClient: OAuth2Client;
@@ -138,6 +140,84 @@ export class AuthService {
     } catch (error) {
       console.error('Error verifying token:', error);
       throw createError('Invalid or expired token', 401);
+    }
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    try {
+      const saltRounds = 12;
+      return await bcrypt.hash(password, saltRounds);
+    } catch (error) {
+      console.error('Error hashing password:', error);
+      throw createError('Failed to process password', 500);
+    }
+  }
+
+  async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
+    try {
+      return await bcrypt.compare(password, hashedPassword);
+    } catch (error) {
+      console.error('Error comparing password:', error);
+      throw createError('Failed to verify password', 500);
+    }
+  }
+
+  async registerUser(userData: RegisterRequest & { isAdmin?: boolean }): Promise<{ user: User; token: string }> {
+    try {
+      // Check if user already exists
+      const existingUser = await userService.getUserByEmail(userData.email);
+      if (existingUser) {
+        throw createError('User with this email already exists', 409);
+      }
+
+      // Hash password
+      const passwordHash = await this.hashPassword(userData.password);
+
+      // Create user
+      const user = await userService.createUser({
+        email: userData.email,
+        name: userData.name,
+        passwordHash,
+        isAdmin: userData.isAdmin || false
+      });
+
+      // Generate token
+      const token = this.generateToken(user);
+
+      return { user, token };
+    } catch (error) {
+      console.error('Error in registerUser:', error);
+      throw error instanceof Error ? error : createError('Failed to register user', 500);
+    }
+  }
+
+  async loginUser(credentials: LoginRequest): Promise<{ user: User; token: string }> {
+    try {
+      // Get user by email
+      const user = await userService.getUserByEmail(credentials.email);
+      if (!user) {
+        throw createError('Invalid email or password', 401);
+      }
+
+      // Check if user has a password (not just Google OAuth)
+      const dbUser = await userService.getDatabaseUserByEmail(credentials.email);
+      if (!dbUser || !dbUser.password_hash) {
+        throw createError('This account uses Google sign-in. Please use Google to log in.', 401);
+      }
+
+      // Verify password
+      const isValidPassword = await this.comparePassword(credentials.password, dbUser.password_hash);
+      if (!isValidPassword) {
+        throw createError('Invalid email or password', 401);
+      }
+
+      // Generate token
+      const token = this.generateToken(user);
+
+      return { user, token };
+    } catch (error) {
+      console.error('Error in loginUser:', error);
+      throw error instanceof Error ? error : createError('Failed to login', 500);
     }
   }
 }

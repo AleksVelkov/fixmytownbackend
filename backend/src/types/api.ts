@@ -58,6 +58,13 @@ export const CreateUserSchema = z.object({
   googleId: z.string().optional(),
 });
 
+export const CreatePasswordUserSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(1).max(100),
+  passwordHash: z.string(),
+  isAdmin: z.boolean().optional().default(false),
+});
+
 export const UpdateUserSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   avatar: z.string().url().optional(),
@@ -90,6 +97,12 @@ export const LoginSchema = z.object({
   password: z.string().min(6),
 });
 
+export const RegisterSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  name: z.string().min(1).max(100),
+});
+
 export const GoogleAuthSchema = z.object({
   idToken: z.string(),
 });
@@ -98,9 +111,11 @@ export type CreateReportRequest = z.infer<typeof CreateReportSchema>;
 export type UpdateReportRequest = z.infer<typeof UpdateReportSchema>;
 export type VoteRequest = z.infer<typeof VoteSchema>;
 export type CreateUserRequest = z.infer<typeof CreateUserSchema>;
+export type CreatePasswordUserRequest = z.infer<typeof CreatePasswordUserSchema>;
 export type UpdateUserRequest = z.infer<typeof UpdateUserSchema>;
 export type AdminActionRequest = z.infer<typeof AdminActionSchema>;
 export type PaginationQuery = z.infer<typeof PaginationSchema>;
 export type ReportFiltersQuery = z.infer<typeof ReportFiltersSchema>;
 export type LoginRequest = z.infer<typeof LoginSchema>;
+export type RegisterRequest = z.infer<typeof RegisterSchema>;
 export type GoogleAuthRequest = z.infer<typeof GoogleAuthSchema>;

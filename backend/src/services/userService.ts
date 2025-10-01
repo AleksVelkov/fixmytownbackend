@@ -1,6 +1,6 @@
 import { supabase } from '@/config/database';
 import { DatabaseUser, User, UserStats } from '@/types/database';
-import { CreateUserRequest, UpdateUserRequest, PaginationQuery } from '@/types/api';
+import { CreateUserRequest, CreatePasswordUserRequest, UpdateUserRequest, PaginationQuery } from '@/types/api';
 import { createError } from '@/middleware/errorHandler';
 
 export class UserService {
@@ -89,17 +89,55 @@ export class UserService {
     }
   }
 
-  async createUser(userData: CreateUserRequest): Promise<User> {
+  async getDatabaseUserByEmail(email: string): Promise<DatabaseUser | null> {
     try {
       const { data, error } = await supabase
         .from('users')
-        .insert({
-          email: userData.email,
-          name: userData.name,
-          avatar: userData.avatar,
-          google_id: userData.googleId,
-          is_admin: false,
-        })
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null; // User not found
+        }
+        console.error('Error fetching database user by email:', error);
+        throw createError('Failed to fetch user', 500);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in getDatabaseUserByEmail:', error);
+      throw error instanceof Error ? error : createError('Failed to fetch user', 500);
+    }
+  }
+
+  async createUser(userData: CreateUserRequest): Promise<User>;
+  async createUser(userData: CreatePasswordUserRequest): Promise<User>;
+  async createUser(userData: CreateUserRequest | CreatePasswordUserRequest): Promise<User> {
+    try {
+      const insertData: any = {
+        email: userData.email,
+        name: userData.name,
+      };
+
+      // Check if it's a Google OAuth user or password user
+      if ('googleId' in userData) {
+        // Google OAuth user
+        const googleUser = userData as CreateUserRequest;
+        insertData.avatar = googleUser.avatar;
+        insertData.google_id = googleUser.googleId;
+        insertData.is_admin = false;
+      } else {
+        // Password user
+        const passwordUser = userData as CreatePasswordUserRequest;
+        insertData.password_hash = passwordUser.passwordHash;
+        insertData.is_admin = passwordUser.isAdmin || false;
+      }
+
+      const { data, error } = await supabase
+        .from('users')
+        .insert(insertData)
         .select()
         .single();
 
