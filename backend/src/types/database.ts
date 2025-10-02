@@ -29,9 +29,8 @@ export interface DatabaseUser {
   name: string;
   password_hash: string | null;
   avatar: string | null;
-  city: string | null;
-  country: string | null;
-  google_id: string | null;
+  location: string | null;
+  provider: string | null;
   is_admin: boolean;
   created_at: string;
   updated_at: string | null;
@@ -78,7 +77,6 @@ export interface User {
   name: string;
   avatar: string | null;
   city: string | null;
-  country: string | null;
   googleId: string | null;
   isAdmin: boolean;
   createdAt: Date;

@@ -23,7 +23,6 @@ router.get('/:id',
       name: user.name,
       avatar: user.avatar,
       city: user.city,
-      country: user.country,
       createdAt: user.createdAt
     };
 

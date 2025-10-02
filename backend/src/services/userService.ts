@@ -11,10 +11,9 @@ export class UserService {
       email: dbUser.email,
       name: dbUser.name,
       avatar: dbUser.avatar,
-      city: (dbUser as any).location || dbUser.city, // Handle both location and city columns
-      country: dbUser.country,
-      googleId: dbUser.google_id,
-      isAdmin: dbUser.is_admin || false, // Default to false if column doesn't exist
+      city: dbUser.location,
+      googleId: (dbUser as any).google_id || null,
+      isAdmin: dbUser.is_admin || false,
       createdAt: new Date(dbUser.created_at),
       updatedAt: dbUser.updated_at ? new Date(dbUser.updated_at) : null,
     };
@@ -168,12 +167,10 @@ export class UserService {
 
       const updateData: any = {};
       
-      if (updates.name) updateData.name = updates.name;
+      if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.avatar !== undefined) updateData.avatar = updates.avatar;
-      // Note: Based on your database schema, city and country might not exist
-      // Let's check what columns are available in your users table
-      if (updates.city !== undefined) updateData.location = updates.city; // Using 'location' column from your schema
-      if (updates.country !== undefined) updateData.country = updates.country;
+      if (updates.city !== undefined) updateData.location = updates.city;
+      // Note: country field is ignored as it doesn't exist in the database schema
 
       console.log('Prepared update data:', updateData);
 
