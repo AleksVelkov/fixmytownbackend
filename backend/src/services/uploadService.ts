@@ -7,7 +7,9 @@ import { randomUUID } from 'crypto';
 export class UploadService {
   private readonly allowedTypes = env.ALLOWED_FILE_TYPES;
   private readonly maxFileSize = env.MAX_FILE_SIZE;
-  private readonly storageBucket = env.SUPABASE_STORAGE_BUCKET;
+  private readonly reportsBucket = env.SUPABASE_STORAGE_BUCKET;
+  private readonly imagesBucket = env.SUPABASE_IMAGES_BUCKET;
+  private readonly profilesBucket = env.SUPABASE_PROFILES_BUCKET;
 
   // Validate file type and size
   private validateFile(file: Express.Multer.File): void {
@@ -54,7 +56,7 @@ export class UploadService {
   }
 
   // Upload file to Supabase Storage
-  async uploadFile(file: Express.Multer.File, folder: string = 'reports'): Promise<string> {
+  async uploadFile(file: Express.Multer.File, folder: string = 'reports', bucketName?: string): Promise<string> {
     try {
       // Validate file
       this.validateFile(file);
@@ -62,13 +64,16 @@ export class UploadService {
       // Process image
       const processedBuffer = await this.processImage(file.buffer, file.mimetype);
 
+      // Determine bucket to use
+      const bucket = bucketName || this.reportsBucket;
+
       // Generate unique filename
       const fileExtension = 'webp'; // Always use WebP after processing
       const fileName = `${folder}/${randomUUID()}.${fileExtension}`;
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
-        .from(this.storageBucket)
+        .from(bucket)
         .upload(fileName, processedBuffer, {
           contentType: 'image/webp',
           cacheControl: '3600'
@@ -81,7 +86,7 @@ export class UploadService {
 
       // Get public URL
       const { data: publicData } = supabase.storage
-        .from(this.storageBucket)
+        .from(bucket)
         .getPublicUrl(fileName);
 
       return publicData.publicUrl;
@@ -92,9 +97,9 @@ export class UploadService {
   }
 
   // Upload multiple files
-  async uploadFiles(files: Express.Multer.File[], folder: string = 'reports'): Promise<string[]> {
+  async uploadFiles(files: Express.Multer.File[], folder: string = 'reports', bucketName?: string): Promise<string[]> {
     try {
-      const uploadPromises = files.map(file => this.uploadFile(file, folder));
+      const uploadPromises = files.map(file => this.uploadFile(file, folder, bucketName));
       return await Promise.all(uploadPromises);
     } catch (error) {
       console.error('Error in uploadFiles:', error);
@@ -103,17 +108,27 @@ export class UploadService {
   }
 
   // Delete file from Supabase Storage
-  async deleteFile(fileUrl: string): Promise<void> {
+  async deleteFile(fileUrl: string, bucketName?: string): Promise<void> {
     try {
       // Extract file path from URL
       const url = new URL(fileUrl);
       const pathParts = url.pathname.split('/');
+      
+      // Determine bucket from URL or use default
+      let bucket = bucketName || this.reportsBucket;
+      
+      // Try to extract bucket from URL path (Supabase URLs include bucket name)
+      const bucketIndex = pathParts.indexOf('object');
+      if (bucketIndex !== -1 && pathParts[bucketIndex + 1] === 'public') {
+        bucket = pathParts[bucketIndex + 2];
+      }
+      
       const fileName = pathParts[pathParts.length - 1];
       const folder = pathParts[pathParts.length - 2];
       const filePath = `${folder}/${fileName}`;
 
       const { error } = await supabase.storage
-        .from(this.storageBucket)
+        .from(bucket)
         .remove([filePath]);
 
       if (error) {
@@ -127,10 +142,12 @@ export class UploadService {
   }
 
   // Get file info
-  async getFileInfo(fileName: string): Promise<any> {
+  async getFileInfo(fileName: string, bucketName?: string): Promise<any> {
     try {
+      const bucket = bucketName || this.reportsBucket;
+      
       const { data, error } = await supabase.storage
-        .from(this.storageBucket)
+        .from(bucket)
         .list('', {
           search: fileName
         });

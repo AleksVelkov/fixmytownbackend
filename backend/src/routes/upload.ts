@@ -36,7 +36,7 @@ router.post('/single',
       });
     }
 
-    const fileUrl = await uploadService.uploadFile(req.file, 'reports');
+    const fileUrl = await uploadService.uploadFile(req.file, 'general', env.SUPABASE_IMAGES_BUCKET);
 
     return res.status(200).json({
       success: true,
@@ -65,7 +65,7 @@ router.post('/multiple',
       });
     }
 
-    const fileUrls = await uploadService.uploadFiles(files, 'reports');
+    const fileUrls = await uploadService.uploadFiles(files, 'general', env.SUPABASE_IMAGES_BUCKET);
 
     return res.status(200).json({
       success: true,
@@ -95,7 +95,7 @@ router.post('/report-image',
       });
     }
 
-    const fileUrl = await uploadService.uploadFile(req.file, 'reports');
+    const fileUrl = await uploadService.uploadFile(req.file, 'reports', env.SUPABASE_STORAGE_BUCKET);
 
     return res.status(200).json({
       success: true,
@@ -121,7 +121,7 @@ router.post('/avatar',
       });
     }
 
-    const fileUrl = await uploadService.uploadFile(req.file, 'avatars');
+    const fileUrl = await uploadService.uploadFile(req.file, 'avatars', env.SUPABASE_PROFILES_BUCKET);
 
     return res.status(200).json({
       success: true,

@@ -21,7 +21,9 @@ const envSchema = z.object({
   SUPABASE_ANON_KEY: z.string().min(1),
   
   // Supabase Storage
-  SUPABASE_STORAGE_BUCKET: z.string().min(1).default('reports-images'),
+  SUPABASE_STORAGE_BUCKET: z.string().min(1).default('report-images'), // Main bucket for reports
+  SUPABASE_IMAGES_BUCKET: z.string().min(1).default('images'), // General images bucket
+  SUPABASE_PROFILES_BUCKET: z.string().min(1).default('profile-pictures'), // Profile pictures bucket
   
   // Google OAuth
   GOOGLE_CLIENT_ID: z.string().min(1),
