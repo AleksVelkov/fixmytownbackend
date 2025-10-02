@@ -12,7 +12,7 @@ export class UserService {
       name: dbUser.name,
       avatar: dbUser.avatar,
       city: dbUser.location,
-      googleId: (dbUser as any).google_id || null,
+      googleId: dbUser.google_id,
       isAdmin: dbUser.is_admin || false,
       createdAt: new Date(dbUser.created_at),
       updatedAt: dbUser.updated_at ? new Date(dbUser.updated_at) : null,

@@ -31,6 +31,7 @@ export interface DatabaseUser {
   avatar: string | null;
   location: string | null;
   provider: string | null;
+  google_id: string | null;
   is_admin: boolean;
   created_at: string;
   updated_at: string | null;
