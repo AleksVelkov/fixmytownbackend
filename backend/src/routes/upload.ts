@@ -83,6 +83,32 @@ router.post('/multiple',
   })
 );
 
+// Upload report image (specific endpoint for report images)
+router.post('/report-image',
+  authenticateToken,
+  upload.single('file'),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: 'No file provided'
+      });
+    }
+
+    const fileUrl = await uploadService.uploadFile(req.file, 'reports');
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        url: fileUrl,
+        originalName: req.file.originalname,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      }
+    });
+  })
+);
+
 // Upload avatar image
 router.post('/avatar',
   authenticateToken,
