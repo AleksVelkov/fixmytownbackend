@@ -55,7 +55,7 @@ export class ReportService {
     try {
       let query = supabase
         .from('reports')
-        .select('*, users(id, name, avatar, location)', { count: 'exact' });
+        .select('*, users!fk_reports_user_id(id, name, avatar, location)', { count: 'exact' });
 
       // Apply filters
       if (filters.status) {
@@ -108,7 +108,7 @@ export class ReportService {
     try {
       let query = supabase
         .from('reports')
-        .select('*, users(id, name, avatar, location)')
+        .select('*, users!fk_reports_user_id(id, name, avatar, location)')
         .eq('id', id);
 
       // If user is not authenticated, only show approved reports
@@ -324,7 +324,7 @@ export class ReportService {
       
       const { data, error, count } = await supabase
         .from('reports')
-        .select('*, users(id, name, avatar, location)', { count: 'exact' })
+        .select('*, users!fk_reports_user_id(id, name, avatar, location)', { count: 'exact' })
         .eq('user_id', userId)
         .range(offset, offset + pagination.limit - 1)
         .order('created_at', { ascending: false });
@@ -394,7 +394,7 @@ export class ReportService {
       
       const { data, error, count } = await supabase
         .from('reports')
-        .select('*, users(id, name, avatar, location)', { count: 'exact' })
+        .select('*, users!fk_reports_user_id(id, name, avatar, location)', { count: 'exact' })
         .or('approval_status.is.null,approval_status.eq.pending')
         .range(offset, offset + pagination.limit - 1)
         .order('created_at', { ascending: false });

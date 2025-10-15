@@ -10,3 +10,6 @@ UUID_ESM_ERROR_FIXED.md
 backend/GOOGLE_AUTH_QUICK_REFERENCE.md
 backend/GOOGLE_AUTH_SETUP.md
 backend/database_add_google_id.sql
+backend/database_add_foreign_keys.sql
+backend/database_complete_fix.sql
+backend/database_fix_orphaned_data.sql
