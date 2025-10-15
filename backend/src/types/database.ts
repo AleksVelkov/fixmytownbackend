@@ -118,5 +118,6 @@ export interface UserStats {
   approved: number;
   inProgress: number;
   resolved: number;
-  votesReceived: number;
+  upvotesReceived: number;
+  downvotesReceived: number;
 }

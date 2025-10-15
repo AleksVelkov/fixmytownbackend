@@ -7,3 +7,6 @@ RAILWAY_DEPLOYMENT_FIXED.md
 backend/RAILWAY_DOCKER_FIX.md
 backend/TYPESCRIPT_BUILD_FIXED.md
 UUID_ESM_ERROR_FIXED.md
+backend/GOOGLE_AUTH_QUICK_REFERENCE.md
+backend/GOOGLE_AUTH_SETUP.md
+backend/database_add_google_id.sql

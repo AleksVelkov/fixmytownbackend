@@ -250,14 +250,16 @@ export class UserService {
       const approvedCount = userReports?.filter(r => r.approval_status === 'approved').length || 0;
       const inProgressCount = userReports?.filter(r => r.status === 'in-progress').length || 0;
       const resolvedCount = userReports?.filter(r => r.status === 'resolved').length || 0;
-      const votesReceivedCount = votesReceived?.length || 0;
+      const upvotesReceivedCount = votesReceived?.filter(v => v.vote_type === 'up').length || 0;
+      const downvotesReceivedCount = votesReceived?.filter(v => v.vote_type === 'down').length || 0;
 
       return {
         submitted: submittedCount,
         approved: approvedCount,
         inProgress: inProgressCount,
         resolved: resolvedCount,
-        votesReceived: votesReceivedCount,
+        upvotesReceived: upvotesReceivedCount,
+        downvotesReceived: downvotesReceivedCount,
       };
     } catch (error) {
       console.error('Error in getUserStats:', error);
