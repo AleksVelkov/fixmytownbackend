@@ -38,14 +38,11 @@ export class ReportService {
       updatedAt: dbReport.updated_at ? new Date(dbReport.updated_at) : null,
     };
 
-    // Include user information if available
+    // Include flattened user information if available
     if (dbReport.users) {
-      report.user = {
-        id: dbReport.users.id,
-        name: dbReport.users.name,
-        avatar: dbReport.users.avatar,
-        city: dbReport.users.location,
-      };
+      report.userName = dbReport.users.name;
+      report.userAvatar = dbReport.users.avatar;
+      report.userCity = dbReport.users.location;
     }
 
     return report;
