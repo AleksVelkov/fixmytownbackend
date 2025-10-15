@@ -68,6 +68,12 @@ export interface Report {
   downvotes: number;
   userVote: string | null;
   userId: string;
+  user?: {
+    id: string;
+    name: string;
+    avatar: string | null;
+    city: string | null;
+  };
   createdAt: Date;
   updatedAt: Date | null;
 }

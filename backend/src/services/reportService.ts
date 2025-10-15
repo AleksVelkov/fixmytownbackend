@@ -5,8 +5,8 @@ import { createError } from '@/middleware/errorHandler';
 
 export class ReportService {
   // Transform database report to API format
-  private transformReport(dbReport: DatabaseReport): Report {
-    return {
+  private transformReport(dbReport: any): Report {
+    const report: Report = {
       id: dbReport.id,
       title: dbReport.title,
       description: dbReport.description,
@@ -37,13 +37,25 @@ export class ReportService {
       createdAt: new Date(dbReport.created_at),
       updatedAt: dbReport.updated_at ? new Date(dbReport.updated_at) : null,
     };
+
+    // Include user information if available
+    if (dbReport.users) {
+      report.user = {
+        id: dbReport.users.id,
+        name: dbReport.users.name,
+        avatar: dbReport.users.avatar,
+        city: dbReport.users.location,
+      };
+    }
+
+    return report;
   }
 
   async getAllReports(filters: ReportFiltersQuery, pagination: PaginationQuery, userId?: string): Promise<{ reports: Report[], total: number }> {
     try {
       let query = supabase
         .from('reports')
-        .select('*', { count: 'exact' });
+        .select('*, users(id, name, avatar, location)', { count: 'exact' });
 
       // Apply filters
       if (filters.status) {
@@ -96,7 +108,7 @@ export class ReportService {
     try {
       let query = supabase
         .from('reports')
-        .select('*')
+        .select('*, users(id, name, avatar, location)')
         .eq('id', id);
 
       // If user is not authenticated, only show approved reports
@@ -312,7 +324,7 @@ export class ReportService {
       
       const { data, error, count } = await supabase
         .from('reports')
-        .select('*', { count: 'exact' })
+        .select('*, users(id, name, avatar, location)', { count: 'exact' })
         .eq('user_id', userId)
         .range(offset, offset + pagination.limit - 1)
         .order('created_at', { ascending: false });
@@ -382,7 +394,7 @@ export class ReportService {
       
       const { data, error, count } = await supabase
         .from('reports')
-        .select('*', { count: 'exact' })
+        .select('*, users(id, name, avatar, location)', { count: 'exact' })
         .or('approval_status.is.null,approval_status.eq.pending')
         .range(offset, offset + pagination.limit - 1)
         .order('created_at', { ascending: false });
