@@ -133,7 +133,7 @@ router.get('/user/my-reports',
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const pagination = (req as any).validatedQuery || req.query;
 
-    const result = await reportService.getUserReports(req.user!.id, pagination);
+    const result = await reportService.getUserReports(req.user!.id, pagination, req.user!.id);
 
     res.status(200).json({
       success: true,
@@ -192,7 +192,7 @@ router.get('/admin/pending',
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const pagination = (req as any).validatedQuery || req.query;
 
-    const result = await reportService.getPendingReports(pagination);
+    const result = await reportService.getPendingReports(pagination, req.user?.id);
 
     res.status(200).json({
       success: true,

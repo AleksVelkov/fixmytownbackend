@@ -4,6 +4,66 @@ import { CreateReportRequest, UpdateReportRequest, ReportFiltersQuery, Paginatio
 import { createError } from '@/middleware/errorHandler';
 
 export class ReportService {
+  // Get user's vote for a specific report
+  private async getUserVoteForReport(reportId: string, userId?: string): Promise<'up' | 'down' | null> {
+    if (!userId) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('votes')
+        .select('vote_type')
+        .eq('report_id', reportId)
+        .eq('user_id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching user vote:', error);
+        return null;
+      }
+
+      return data?.vote_type || null;
+    } catch (error) {
+      console.error('Error in getUserVoteForReport:', error);
+      return null;
+    }
+  }
+
+  // Enrich a report with user's vote
+  private async enrichReportWithUserVote(report: Report, userId?: string): Promise<Report> {
+    const userVote = await this.getUserVoteForReport(report.id, userId);
+    return {
+      ...report,
+      userVote
+    };
+  }
+
+  // Enrich multiple reports with user votes
+  private async enrichReportsWithUserVotes(reports: Report[], userId?: string): Promise<Report[]> {
+    if (!userId) return reports;
+
+    // Get all votes for this user for all these reports at once (more efficient)
+    const reportIds = reports.map(r => r.id);
+    const { data: votes, error } = await supabase
+      .from('votes')
+      .select('report_id, vote_type')
+      .eq('user_id', userId)
+      .in('report_id', reportIds);
+
+    if (error) {
+      console.error('Error fetching user votes:', error);
+      return reports;
+    }
+
+    // Create a map of report_id -> vote_type
+    const voteMap = new Map(votes?.map(v => [v.report_id, v.vote_type]) || []);
+
+    // Enrich each report with user's vote
+    return reports.map(report => ({
+      ...report,
+      userVote: voteMap.get(report.id) || null
+    }));
+  }
+
   // Transform database report to API format
   private transformReport(dbReport: any): Report {
     const report: Report = {
@@ -91,8 +151,11 @@ export class ReportService {
 
       const reports = data?.map(report => this.transformReport(report)) || [];
       
+      // Enrich reports with user votes
+      const enrichedReports = await this.enrichReportsWithUserVotes(reports, userId);
+      
       return {
-        reports,
+        reports: enrichedReports,
         total: count || 0
       };
     } catch (error) {
@@ -123,7 +186,10 @@ export class ReportService {
         throw createError('Failed to fetch report', 500);
       }
 
-      return this.transformReport(data);
+      const report = this.transformReport(data);
+      
+      // Enrich report with user's vote
+      return await this.enrichReportWithUserVote(report, userId);
     } catch (error) {
       console.error('Error in getReportById:', error);
       throw error instanceof Error ? error : createError('Failed to fetch report', 500);
@@ -261,14 +327,14 @@ export class ReportService {
       let voteOperation;
       if (existingVote) {
         if (existingVote.vote_type === voteType) {
-          // Remove vote
+          // Remove vote (toggle off)
           voteOperation = supabase
             .from('votes')
             .delete()
             .eq('report_id', reportId)
             .eq('user_id', userId);
         } else {
-          // Update vote
+          // Update vote (change from up to down or vice versa)
           voteOperation = supabase
             .from('votes')
             .update({ vote_type: voteType })
@@ -287,35 +353,50 @@ export class ReportService {
       }
 
       const { error: voteError } = await voteOperation;
-      if (voteError) throw voteError;
+      if (voteError) {
+        console.error('Error in vote operation:', voteError);
+        throw voteError;
+      }
 
-      // Get updated vote counts
+      // Get updated vote counts from votes table
       const { data: voteCounts, error: countError } = await supabase
         .from('votes')
         .select('vote_type')
         .eq('report_id', reportId);
 
-      if (countError) throw countError;
+      if (countError) {
+        console.error('Error fetching vote counts:', countError);
+        throw countError;
+      }
 
       const upvotes = voteCounts?.filter(v => v.vote_type === 'up').length || 0;
       const downvotes = voteCounts?.filter(v => v.vote_type === 'down').length || 0;
-      
-      // Determine user's current vote
-      const userVote = existingVote?.vote_type === voteType ? null : voteType;
 
-      // Update the report with new vote counts
-      return await this.updateReport(reportId, { 
-        upvotes, 
-        downvotes, 
-        userVote 
-      } as any, userId, true);
+      // Update the report table with aggregated vote counts
+      const { data: updatedReport, error: updateError } = await supabase
+        .from('reports')
+        .update({
+          upvotes,
+          downvotes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', reportId)
+        .select('*, users!fk_reports_user_id(id, name, avatar, location)')
+        .single();
+
+      if (updateError) {
+        console.error('Error updating report vote counts:', updateError);
+        throw updateError;
+      }
+
+      return this.transformReport(updatedReport);
     } catch (error) {
       console.error('Error in voteOnReport:', error);
       throw error instanceof Error ? error : createError('Failed to vote on report', 500);
     }
   }
 
-  async getUserReports(userId: string, pagination: PaginationQuery): Promise<{ reports: Report[], total: number }> {
+  async getUserReports(userId: string, pagination: PaginationQuery, viewerId?: string): Promise<{ reports: Report[], total: number }> {
     try {
       const offset = (pagination.page - 1) * pagination.limit;
       
@@ -333,8 +414,11 @@ export class ReportService {
 
       const reports = data?.map(report => this.transformReport(report)) || [];
       
+      // Enrich reports with viewer's votes
+      const enrichedReports = await this.enrichReportsWithUserVotes(reports, viewerId);
+      
       return {
-        reports,
+        reports: enrichedReports,
         total: count || 0
       };
     } catch (error) {
@@ -385,7 +469,7 @@ export class ReportService {
     }
   }
 
-  async getPendingReports(pagination: PaginationQuery): Promise<{ reports: Report[], total: number }> {
+  async getPendingReports(pagination: PaginationQuery, userId?: string): Promise<{ reports: Report[], total: number }> {
     try {
       const offset = (pagination.page - 1) * pagination.limit;
       
@@ -403,8 +487,11 @@ export class ReportService {
 
       const reports = data?.map(report => this.transformReport(report)) || [];
       
+      // Enrich reports with user's votes
+      const enrichedReports = await this.enrichReportsWithUserVotes(reports, userId);
+      
       return {
-        reports,
+        reports: enrichedReports,
         total: count || 0
       };
     } catch (error) {
